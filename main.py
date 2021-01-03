@@ -24,7 +24,7 @@ def load_images(file_name):
             temp_img = [[256 for r in range(rows)] for c in range(cols)]
             for c in range(cols):
                 for r in range(rows):
-                    temp_img[c][r] = int.from_bytes(file.read(1), byteorder='big')
+                    temp_img[c][r] = int.from_bytes(file.read(1), byteorder='big') / 255
             result.append(temp_img)
             if img % 100 == 0:
                 print(img)
