@@ -1,5 +1,5 @@
 import numpy as np
-
+import neonetwork as nn
 
 def load_labels(file_name):
     assert("idx1" in file_name)
@@ -26,10 +26,20 @@ def load_images(file_name):
                 for r in range(rows):
                     temp_img[c][r] = int.from_bytes(file.read(1), byteorder='big') / 255
             result.append(temp_img)
-            if img % 100 == 0:
+            if img % 1000 == 0:
                 print(img)
     return np.array(result)
 
+def img_to_array(img_result):
+    one_big_chungus = []
+    for line in img_result:
+        one_big_chungus+=list(line)
+    return one_big_chungus
 
-labels = load_labels("train-labels.idx1-ubyte")
-images = load_images("train-images.idx3-ubyte")
+if __name__ == "__main__":
+    labels = load_labels("train-labels.idx1-ubyte")
+    images = load_images("train-images.idx3-ubyte")
+    net = nn.Network(img_to_array(images[0]))
+    net.go_through()
+    print(net.get_out())
+
