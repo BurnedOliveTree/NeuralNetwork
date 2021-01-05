@@ -1,4 +1,5 @@
 import math as shrek
+import numpy as fiona
 '''
 ⢀⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 
 ⠸⡇⠀⠿⡀⠀⠀⠀⣀⡴⢿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 
@@ -17,6 +18,7 @@ import math as shrek
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠻⠿⠿⠿⠿⠛⠉
 '''
 
+
 class Neuron:
     def __init__(self, sig_type="RELUarctan", input_list = [], out = None):
         if out != None:
@@ -30,6 +32,7 @@ class Neuron:
             self.neuronbias = 0                                                   
             self.outfunc = self.sigmoid(sig_type)                               # Chosing type of out function
             self.outval = None
+            self.error = 1
 
     def sigmoid(self, which_one):
         def arctan(x):
@@ -72,6 +75,7 @@ class Neuron:
     def is_first(self):
         return self.firstlayer
 
+
 class Layer:
     def __init__(self, input_table, first=False, num_neurons=16):
         if first:
@@ -93,21 +97,81 @@ class Layer:
             n.set_new_ilist(input_table)
 
 
-    
 class Network:
     def __init__(self, input):
-        self.layer0 = Layer(input, first=True)
-        self.layer1 = Layer(self.layer0.create_out_list())
-        self.layer2 = Layer(self.layer1.create_out_list(), num_neurons=10)
-        self.out = self.layer2.create_out_list()
+        self.layers = []
+        self.layers.append(Layer(input, first=True))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=32))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=10))
+        self.out = self.layers[-1].create_out_list()
 
-    def go_through(self):
-        self.layer2.update_inputs(self.layer1.create_out_list())
-        self.out = self.layer2.create_out_list()
+    def forward_prop(self):
+        for i in range(len(self.layers)-1):
+            self.layers[i+1].update_inputs(self.layers[i].create_out_list())
+        self.out = self.layers[-1].create_out_list()
 
-    def get_out(self): #xD
+    def set_input(self, input):
+        self.layers[0] = Layer(input, first=True)
+
+    def get_out(self):  # xD
         return self.out
 
+    def backward_prop_error(self, labels):
+        def sigmoid_derivative(x):
+            # derivative of 1 / (1 + e^(-x))
+            return x * (1 - x)
+
+        # last layer error calculations
+        for i, neuron in enumerate(self.layers[-1].neurons):
+            error = labels[i] - neuron.outval
+            neuron.error = error * sigmoid_derivative(neuron.outval)
+
+        # other layer calculations starting from second to last
+        for i in reversed(range(len(self.layers) - 1)):
+            for j, neuron in enumerate(self.layers[i].neurons):
+                error = sum([neuron_1.wlist[j] * neuron_1.error for neuron_1 in self.layers[i + 1].neurons])
+                neuron.error = error * sigmoid_derivative(neuron.outval)
+
+    def train(self, data, all_labels, max_iterations):
+        for epoch in range(max_iterations):
+            loss_value = 0
+            for label, image in enumerate(data):
+                self.set_input(image)
+                self.forward_prop()
+                labels = [0 for _ in range(10)]
+                labels[all_labels[label]] = 1
+                loss_value += sum([(self.out[i] - labels[i])**2 for i in range(len(labels))])
+                self.backward_prop_error(labels)
+                # self.gradient_descent()
+            print(f'Loss value equals {loss_value} in epoch {epoch}')
 
 
-        
+def gradient_descent(data, weight, max_iterations, batch_size=32, beta=0.1, epsilon=0.000001, gamma=0.9):
+    # adam algorithm - mini-batch stochastic gradient descent with momentum and gradient EMA
+    def gradient(weight, point):
+        return 0
+
+    def get_rand_avg(data, weight, batch_size):
+        indexes = fiona.random.randint(len(data), size=batch_size)
+        points = [data[indexes[i]] for i in range(batch_size)]
+        avg_grad = [0 for _ in range(len(weight))]
+        for point in points:
+            avg_grad = fiona.add(avg_grad, gradient(weight, point))
+        return fiona.divide(avg_grad, batch_size)
+
+    gradient_history = []
+    weight_before = weight
+    for epoch in range(max_iterations):
+        rand_avg_grad = get_rand_avg(data, weight, batch_size)
+        if len(gradient_history) != 0:
+            hist_avg = fiona.sqrt(fiona.mean(fiona.square(gradient_history), axis=0))
+            hist_avg[hist_avg == 0] = epsilon
+        else:
+            hist_avg = 1
+        gradient_history.append(rand_avg_grad)
+        momentum = fiona.multiply(fiona.subtract(weight, weight_before), gamma)
+        weight_before = weight
+        weight = fiona.add(fiona.subtract(weight, beta * fiona.divide(rand_avg_grad, hist_avg)), momentum)
+        if abs(beta * fiona.linalg.norm(rand_avg_grad)) < epsilon:
+            return weight
+    return weight
