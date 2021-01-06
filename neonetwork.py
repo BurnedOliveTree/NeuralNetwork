@@ -20,7 +20,7 @@ import numpy as fiona
 
 
 class Neuron:
-    def __init__(self, sig_type="RELUarctan", input_list = [], out = None):
+    def __init__(self, sig_type="arctan", input_list = [], out = None):
         if out != None:
             self.firstlayer = True
             self.outval = out                                                   # Value that exits neuron
@@ -32,7 +32,7 @@ class Neuron:
             self.neuronbias = 0                                                   
             self.outfunc = self.sigmoid(sig_type)                               # Chosing type of out function
             self.outval = None
-            self.error = 1
+            self.error = 0
 
     def sigmoid(self, which_one):
         def arctan(x):
@@ -118,8 +118,9 @@ class Network:
 
     def backward_prop_error(self, labels):
         def sigmoid_derivative(x):
-            # derivative of 1 / (1 + e^(-x))
-            return x * (1 - x)
+            # derivative of 1 / (1 + e^(-x)):  x * (1 - x)
+            # derivative of arctan:
+            return fiona.pi / (2 * (1 + x ** 2))
 
         # last layer error calculations
         for i, neuron in enumerate(self.layers[-1].neurons):
@@ -129,12 +130,11 @@ class Network:
         # other layer calculations starting from second to last
         for i in reversed(range(len(self.layers) - 1)):
             for j, neuron in enumerate(self.layers[i].neurons):
-                error = sum([neuron_1.wlist[j] * neuron_1.error for neuron_1 in self.layers[i + 1].neurons])
+                error = sum([neuron.wlist[j] * neuron_1.error for neuron_1 in self.layers[i + 1].neurons])
                 neuron.error = error * sigmoid_derivative(neuron.outval)
 
     def update_weights(self, image, l_rate):
         for i in range(1, len(self.layers)):
-            inputs = image
             inputs = [neuron.outval for neuron in self.layers[i - 1].neurons]
             for neuron in self.layers[i].neurons:
                 for j in range(len(inputs)):
@@ -142,6 +142,7 @@ class Network:
                 neuron.neuronbias += l_rate * neuron.error
 
     def train(self, data, all_labels, max_iterations, batch_size=64, epsilon=0.01):
+        assert len(data) == len(all_labels)
         loss_value = 0
         for epoch in range(max_iterations):
             old_loss_value = loss_value
@@ -152,10 +153,10 @@ class Network:
                 self.set_input(image)
                 self.forward_prop()
                 labels = [0 for _ in range(10)]
-                labels[all_labels[label]] = 1
+                labels[all_labels[indexes[label]]] = 1
                 loss_value += sum([(self.out[i] - labels[i])**2 for i in range(len(labels))])
                 self.backward_prop_error(labels)
-                self.update_weights(image, l_rate=0.2)
+                self.update_weights(image, l_rate=0.1)
             print(f'Loss value equals {loss_value} in epoch {epoch}')
             if abs(loss_value - old_loss_value) < epsilon:
                 return

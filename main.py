@@ -43,7 +43,7 @@ if __name__ == "__main__":
     labels = load_labels("train-labels.idx1-ubyte")
     images = load_images("train-images.idx3-ubyte")
     net = nn.Network([0 for i in range(784)])
-    net.train([img_to_array(images[i]) for i in range(0, 60000)], labels, 20)
+    net.train([img_to_array(images[i]) for i in range(len(images))], labels, 20)
 
     net.set_input(img_to_array(images[320]))
     net.forward_prop()
