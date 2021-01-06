@@ -132,18 +132,33 @@ class Network:
                 error = sum([neuron_1.wlist[j] * neuron_1.error for neuron_1 in self.layers[i + 1].neurons])
                 neuron.error = error * sigmoid_derivative(neuron.outval)
 
-    def train(self, data, all_labels, max_iterations):
+    def update_weights(self, image, l_rate):
+        for i in range(1, len(self.layers)):
+            inputs = image
+            inputs = [neuron.outval for neuron in self.layers[i - 1].neurons]
+            for neuron in self.layers[i].neurons:
+                for j in range(len(inputs)):
+                    neuron.wlist[j] += l_rate * neuron.error * inputs[j]
+                neuron.neuronbias += l_rate * neuron.error
+
+    def train(self, data, all_labels, max_iterations, batch_size=64, epsilon=0.01):
+        loss_value = 0
         for epoch in range(max_iterations):
+            old_loss_value = loss_value
             loss_value = 0
-            for label, image in enumerate(data):
+            indexes = fiona.random.randint(len(data), size=batch_size)
+            batch = [data[indexes[i]] for i in range(batch_size)]
+            for label, image in enumerate(batch):
                 self.set_input(image)
                 self.forward_prop()
                 labels = [0 for _ in range(10)]
                 labels[all_labels[label]] = 1
                 loss_value += sum([(self.out[i] - labels[i])**2 for i in range(len(labels))])
                 self.backward_prop_error(labels)
-                # self.gradient_descent()
+                self.update_weights(image, l_rate=0.2)
             print(f'Loss value equals {loss_value} in epoch {epoch}')
+            if abs(loss_value - old_loss_value) < epsilon:
+                return
 
 
 def gradient_descent(data, weight, max_iterations, batch_size=32, beta=0.1, epsilon=0.000001, gamma=0.9):

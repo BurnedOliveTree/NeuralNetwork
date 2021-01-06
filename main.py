@@ -42,7 +42,16 @@ def img_to_array(img_result):
 if __name__ == "__main__":
     labels = load_labels("train-labels.idx1-ubyte")
     images = load_images("train-images.idx3-ubyte")
-    net = nn.Network(img_to_array(images[0]))
-    net.train([img_to_array(images[i]) for i in range(1, 4)], labels[1:4], 1)
+    net = nn.Network([0 for i in range(784)])
+    net.train([img_to_array(images[i]) for i in range(0, 60000)], labels, 20)
+
+    net.set_input(img_to_array(images[320]))
+    net.forward_prop()
     print(net.get_out())
+    print(labels[320])
+
+    net.set_input(img_to_array(images[784]))
+    net.forward_prop()
+    print(net.get_out())
+    print(labels[784])
 
