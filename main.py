@@ -29,7 +29,7 @@ def load_images(file_name):
             result.append(temp_img)
             if img % 1000 == 0:
                 print(img)
-    return np.array(result)
+    return (np.array(result))
 
 
 def img_to_array(img_result):
