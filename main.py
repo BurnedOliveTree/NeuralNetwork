@@ -1,57 +1,28 @@
-import numpy as np
 import neonetwork as nn
+import dataloader as dl
 
-
-def load_labels(file_name):
-    assert("idx1" in file_name)
-    result = []
-    with open(file_name, "rb") as file:
-        byte = int.from_bytes(file.read(4), byteorder='big')    # magic number
-        no = int.from_bytes(file.read(4), byteorder='big')      # number of images
-        for img in range(no):
-            result.append(int.from_bytes(file.read(1), byteorder='big'))
-    return np.array(result)
-
-
-def load_images(file_name):
-    assert("idx3" in file_name)
-    result = []
-    with open(file_name, "rb") as file:
-        byte = int.from_bytes(file.read(4), byteorder='big')    # magic number
-        no = int.from_bytes(file.read(4), byteorder='big')      # number of images
-        rows = int.from_bytes(file.read(4), byteorder='big')    # number of rows
-        cols = int.from_bytes(file.read(4), byteorder='big')    # number of columns
-        for img in range(no):
-            temp_img = [[256 for r in range(rows)] for c in range(cols)]
-            for c in range(cols):
-                for r in range(rows):
-                    temp_img[c][r] = int.from_bytes(file.read(1), byteorder='big') / 255
-            result.append(temp_img)
-            if img % 1000 == 0:
-                print(img)
-    return np.array(result)
-
-
-def img_to_array(img_result):
-    one_big_chungus = []
-    for line in img_result:
-        one_big_chungus += list(line)
-    return one_big_chungus
-
+def foo(images, labels, which):
+    net.set_input(dl.img_to_array(images[which]))
+    net.forward_prop()
+    print(net.get_out())
+    print(labels[which])
+    dl.show_img_arr(dl.img_to_array(images[which]))
 
 if __name__ == "__main__":
-    labels = load_labels("train-labels.idx1-ubyte")
-    images = load_images("train-images.idx3-ubyte")
+    labels = dl.load_labels("train-labels.idx1-ubyte", 2000)
+    images = dl.load_images("train-images.idx3-ubyte", 2000)
+
     net = nn.Network([0 for i in range(784)])
-    net.train([img_to_array(images[i]) for i in range(len(images))], labels, 20)
+    foo(images, labels, 0)
+    net.train(dl.create_data(images,labels), 5)
+    net.test(dl.create_data(images,labels))
 
-    net.set_input(img_to_array(images[320]))
-    net.forward_prop()
-    print(net.get_out())
-    print(labels[320])
-
-    net.set_input(img_to_array(images[784]))
-    net.forward_prop()
-    print(net.get_out())
-    print(labels[784])
+    # foo(images, labels, 0)
+    # foo(images, labels, 1)
+    # foo(images, labels, 2)
+    # foo(images, labels, 3)
+    # foo(images, labels, 4)
+    # foo(images, labels, 5)
+    # foo(images, labels, 6)
+    # foo(images, labels, 7)
 
