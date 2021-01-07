@@ -1,8 +1,7 @@
 import math as shrek
-from os import truncate
 import numpy as fiona
 import random
-from copy import deepcopy
+
 '''
 ⢀⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 
 ⠸⡇⠀⠿⡀⠀⠀⠀⣀⡴⢿⣿⣿⣿⣿⣿⣿⣿⣷⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 
@@ -23,19 +22,19 @@ from copy import deepcopy
 
 
 class Neuron:
-    def __init__(self, sig_type="arctanupper", input_list = [], out = None, random_wages =False):
-        if out != None:
+    def __init__(self, sig_type="arctanupper", input_list=[], out=None, random_wages=False):
+        if out is not None:
             self.firstlayer = True
             self.outval = out                                                   # Value that exits neuron
         else:           
             self.firstlayer = False
             self.ilist = input_list                                             # List of variables from layer behind
             if not random_wages:
-                self.wlist = [1 for x in range(len(input_list))]                    # List of weights for every neuron behind
+                self.wlist = [1 for x in range(len(input_list))]                # List of weights for every neuron behind
             if random_wages:
-                self.wlist = [random.uniform(-1,1) for x in range(len(input_list))]
+                self.wlist = [random.uniform(-1, 1) for x in range(len(input_list))]
             self.neuronbias = 0                                                   
-            self.outfunc = self.sigmoid(sig_type)                               # Chosing type of out function
+            self.outfunc = self.sigmoid(sig_type)                               # Choosing type of out function
             self.out = None
             self.outval = None
             self.gradvector = [0 for x in range(len(self.ilist)+1)]             # Errors for all weights in wlist and last element is error for neurobias 
@@ -45,14 +44,19 @@ class Neuron:
     def sigmoid(self, which_one):
         def arctan(x):
             return shrek.atan(x)/(shrek.pi/2)
+
         def linear(x):
             return x
+
         def RELUarctan(x):
             return max(0, shrek.atan(x)/(shrek.pi/2))
+
         def RELUlinear(x):
             return max(0, x)
+
         def arctanupper(x):
-            return shrek.atan(x) / shrek.pi +1/2
+            return shrek.atan(x) / shrek.pi + 1/2
+
         if which_one == "arctanupper":
             return arctanupper
         if which_one == "arctan":
@@ -71,7 +75,7 @@ class Neuron:
         num_imputs = len(self.ilist)
         for i in range(num_imputs):
             out += self.ilist[i]*self.wlist[i]
-        out+=self.neuronbias
+        out += self.neuronbias
         self.out = out
         self.outval = self.outfunc(out)
 
@@ -92,12 +96,12 @@ class Neuron:
 
 
 class Layer:
-    def __init__(self, input_table, first=False, num_neurons=16, outfunc_type = "arctanupper"):
+    def __init__(self, input_table, first=False, num_neurons=16, outfunc_type="arctanupper"):
         self.first = first
         if first:
-            self.neurons = [Neuron(out = x, sig_type = outfunc_type) for x in input_table]
+            self.neurons = [Neuron(out=x, sig_type=outfunc_type) for x in input_table]
         elif not first:
-            self.neurons = [Neuron(input_list = input_table, sig_type = outfunc_type) for x in range(num_neurons)]  
+            self.neurons = [Neuron(input_list=input_table, sig_type=outfunc_type) for x in range(num_neurons)]
 
     def create_out_list(self):
         output = []
@@ -107,7 +111,7 @@ class Layer:
             output.append(neuron.get_outval())
         return output
 
-    def update_inputs(self,input_table):
+    def update_inputs(self, input_table):
         if not self.first:
             for n in self.neurons:
                 n.set_new_ilist(input_table)
@@ -118,15 +122,16 @@ class Layer:
     def show(self):
         for n in self.neurons:
             n.show()
-            print("",end=" ")
+            print("", end=" ")
+
 
 class Network:
     def __init__(self, input):
         self.layers = []
         self.layers.append(Layer(input, first=True))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=16))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=16))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=10, outfunc_type = "linear"))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=256))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=64))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=10, outfunc_type="linear"))
         self.out = self.layers[-1].create_out_list()
 
     def forward_prop(self):
@@ -141,9 +146,9 @@ class Network:
         return self.out
 
     def backward_prop(self, answers):
-        def sigmoid_derivative(x, which_one = "arctanupper"):
+        def sigmoid_derivative(x, which_one="arctanupper"):
             # derivative of arctan * pi/2:
-            #return 2 / (fiona.pi * (1 + x ** 2))
+            # return 2 / (fiona.pi * (1 + x ** 2))
             # derivative of arctan * 1/pi + 1/2:
             if which_one == "arctanupper":
                 return 1 / (fiona.pi * (1 + x ** 2))
@@ -168,59 +173,47 @@ class Network:
                 grad_sum = 0
                 for pneuron in parentlayer.neurons:
                     grad_sum += pneuron.wlist[neuroniter] * sigmoid_derivative(pneuron.out) * pneuron.grad
-                #grad_avg/=len(parentlayer.neurons)
+                # grad_avg /= len(parentlayer.neurons)
                 neuron.grad = grad_sum
                 for graditer in range(len(neuron.ilist)):
                     neuron.gradvector[graditer] += neuron.ilist[graditer] * sigmoid_derivative(neuron.out) * neuron.grad
                 neuron.gradvector[-1] += sigmoid_derivative(neuron.out) * neuron.grad
     
-    def update_weights(self, iterations_in_batch, lrate, gamma = 0.9):
+    def update_weights(self, iterations_in_batch, lrate, gamma):
         for i in range(1, len(self.layers)):
             for neuron in self.layers[i].neurons:
                 for iterator in range(len(neuron.wlist)):
-                    neuron.wlist[iterator] -= (neuron.gradvector[iterator] / iterations_in_batch) * lrate + gamma* ((neuron.lgradvector[iterator] / iterations_in_batch) *lrate) 
-                neuron.neuronbias -= (neuron.gradvector[-1] / iterations_in_batch) * lrate + gamma* ((neuron.lgradvector[-1] / iterations_in_batch) *lrate)
+                    neuron.wlist[iterator] -= (neuron.gradvector[iterator] / iterations_in_batch) * lrate + gamma * ((neuron.lgradvector[iterator] / iterations_in_batch) * lrate)
+                neuron.neuronbias -= (neuron.gradvector[-1] / iterations_in_batch) * lrate + gamma * ((neuron.lgradvector[-1] / iterations_in_batch) * lrate)
                 neuron.lgradvector = neuron.gradvector
                 neuron.gradvector = [0 for x in range(len(neuron.ilist)+1)]             
 
-    def train(self, data, max_iterations, batch_size=32, epsilon=20, lrate = 0.001):
-        end_all = False
+    def train(self, data, max_iterations, batch_size=32, beta=0.001, epsilon=1, gamma=0.5):
         for epoch in range(max_iterations):
-            end_epoch = False
-            bsize = batch_size
             loss_value = 0
-            epoch_data = deepcopy(data)
-            print(f"Epoch Data Length: {len(epoch_data)}")
-            while True:
-                batch = []
-                loss_value = 0
-                for iter in range(batch_size):
-                    index = random.randint(0,len(epoch_data)-1)
-                    batch.append(epoch_data[index])
-                    epoch_data.pop(index)
-                    if len(epoch_data)==0:
-                        end_epoch= True
-                        bsize = iter
+            fiona.random.shuffle(data)
+            print(f"Epoch {epoch}, Data Length: {len(data)}")
+            for i, pair in enumerate(data):
+                img = pair[0]
+                label = pair[1]
+                self.set_input(img)
+                self.forward_prop()
+                answer = [0 for _ in range(10)]
+                answer[label] = 1
+                loss_value += sum([(self.out[i] - answer[i])**2 for i in range(len(answer))])
+                self.backward_prop(answer)
+                if i % batch_size == 0:
+                    self.update_weights(batch_size, beta, gamma)
+                    loss_value /= batch_size
+                    print(f"Batch finished. Elements to go: {len(data)-i} loss in batch: {loss_value}")
+                    if loss_value < epsilon:
                         break
-                for pair in batch:
-                    img = pair[0]
-                    label = pair[1]
-                    self.set_input(img)
-                    self.forward_prop()
-                    answer = [0 for x in range(10)]
-                    answer[label] = 1
-                    loss_value += sum([(self.out[i] - answer[i])**2 for i in range(len(answer))])
-                    self.backward_prop(answer)
-                self.update_weights(bsize, lrate)
-                print(f"Batch finished. Elements to go: {len(epoch_data)} loss in batch: {loss_value/bsize}")
-                if end_epoch:
-                    print(f"EPOCH {epoch}")
+                    loss_value = 0
+                if i == len(data):
                     break
-            if loss_value<epsilon:
-                break
 
     def test(self, data):
-        how_good = 0
+        accuracy = 0
         for it, d in enumerate(data):
             self.set_input(d[0])
             self.forward_prop()
@@ -232,5 +225,5 @@ class Network:
                     maxind = i
                     maxval = v
             if maxind == d[1]:
-                how_good+=1
-            print(f"{how_good}/{it}")
+                accuracy += 1
+        print(f"{accuracy/len(data)}%")
