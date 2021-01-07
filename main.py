@@ -3,10 +3,6 @@ import dataloader as dl
 
 def foo(images, labels, which):
     net.set_input(dl.img_to_array(images[which]))
-    net.forward_prop()
-    print(net.get_out())
-    print(labels[which])
-    dl.show_img_arr(dl.img_to_array(images[which]))
 
 if __name__ == "__main__":
     labels = dl.load_labels("train-labels.idx1-ubyte", 2000)

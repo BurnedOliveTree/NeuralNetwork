@@ -179,7 +179,7 @@ class Network:
     '''
     def update_weights_error(self, image, l_rate):
         for i in range(1, len(self.layers)):
-            inputs = [neuron.outval for neuron in self.layers[i - 1].neurons]
+            inputs = [neuron.outval for neuron in self.layers[i].neurons]
             for neuron in self.layers[i].neurons:
                 for j in range(len(inputs)):
                     neuron.wlist[j] += l_rate * neuron.error * inputs[j]
@@ -204,11 +204,12 @@ class Network:
             loss_value = 0
             indexes = fiona.random.randint(len(data), size=batch_size)
             batch = [data[indexes[i]] for i in range(batch_size)]
+            batch_labels = [all_labels[indexes[i]] for i in range(batch_size)]
             for label, image in enumerate(batch):
                 self.set_input(image)
                 self.forward_prop()
                 labels = [0 for _ in range(10)]
-                labels[all_labels[indexes[label]]] = 1
+                labels[batch_labels[label]] = 1
                 loss_value += sum([(self.out[i] - labels[i])**2 for i in range(len(labels))])
                 self.backward_prop_error(labels)
                 self.update_weights_error(image, l_rate=0.1)
