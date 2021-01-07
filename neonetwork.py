@@ -53,6 +53,10 @@ class Neuron:
             return max(0, x)
         def arctanupper(x):
             return shrek.atan(x) / shrek.pi +1/2
+        def sigmoid(x):
+            return 1/(1 + fiona.exp(-x))
+        if which_one == "sigmoid":
+            return sigmoid
         if which_one == "arctanupper":
             return arctanupper
         if which_one == "arctan":
@@ -97,7 +101,7 @@ class Layer:
         if first:
             self.neurons = [Neuron(out = x, sig_type = outfunc_type) for x in input_table]
         elif not first:
-            self.neurons = [Neuron(input_list = input_table, sig_type = outfunc_type) for x in range(num_neurons)]  
+            self.neurons = [Neuron(input_list = input_table, sig_type = outfunc_type, random_wages = True) for x in range(num_neurons)]  
 
     def create_out_list(self):
         output = []
@@ -124,9 +128,8 @@ class Network:
     def __init__(self, input):
         self.layers = []
         self.layers.append(Layer(input, first=True))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=16))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=16))
-        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=10, outfunc_type = "linear"))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=30))
+        self.layers.append(Layer(self.layers[-1].create_out_list(), num_neurons=10, outfunc_type="linear"))
         self.out = self.layers[-1].create_out_list()
 
     def forward_prop(self):
@@ -151,6 +154,8 @@ class Network:
                 return 1
             if which_one == "arctan":
                 return 2 / (fiona.pi * (1 + x ** 2))
+            if which_one == "sigmoid":
+                return (fiona.exp(-x))/((fiona.exp(-x)+1)**2)
 
         def cost_func_derivative(supposed, answer):
             return 2*(supposed - answer)
@@ -174,7 +179,7 @@ class Network:
                     neuron.gradvector[graditer] += neuron.ilist[graditer] * sigmoid_derivative(neuron.out) * neuron.grad
                 neuron.gradvector[-1] += sigmoid_derivative(neuron.out) * neuron.grad
     
-    def update_weights(self, iterations_in_batch, lrate, gamma = 0.9):
+    def update_weights(self, iterations_in_batch, lrate, gamma):
         for i in range(1, len(self.layers)):
             for neuron in self.layers[i].neurons:
                 for iterator in range(len(neuron.wlist)):
@@ -183,7 +188,7 @@ class Network:
                 neuron.lgradvector = neuron.gradvector
                 neuron.gradvector = [0 for x in range(len(neuron.ilist)+1)]             
 
-    def train(self, data, max_iterations, batch_size=32, epsilon=20, lrate = 0.001):
+    def train(self, data, max_iterations, batch_size=32, epsilon=20, lrate = 0.01, gamma = 0.5):
         end_all = False
         for epoch in range(max_iterations):
             end_epoch = False
@@ -211,8 +216,10 @@ class Network:
                     answer[label] = 1
                     loss_value += sum([(self.out[i] - answer[i])**2 for i in range(len(answer))])
                     self.backward_prop(answer)
-                self.update_weights(bsize, lrate)
+                self.update_weights(bsize, lrate, gamma)
                 print(f"Batch finished. Elements to go: {len(epoch_data)} loss in batch: {loss_value/bsize}")
+                print(f"Out: {self.get_out()}")
+                print(f"first neuron wages: {self.layers[-1].neurons[0].wlist}")
                 if end_epoch:
                     print(f"EPOCH {epoch}")
                     break
@@ -225,12 +232,8 @@ class Network:
             self.set_input(d[0])
             self.forward_prop()
             answers = self.out
-            maxind = 0
-            maxval = 0
-            for i, v in enumerate(answers):
-                if v > maxval:
-                    maxind = i
-                    maxval = v
+            maxind = fiona.argmax(self.out)
             if maxind == d[1]:
                 how_good+=1
-            print(f"{how_good}/{it}")
+            if it%100==0:
+                print(f"{how_good}/{it}")
