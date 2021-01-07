@@ -2,7 +2,7 @@ import neonetwork as nn
 import dataloader as dl
 
 
-def foo(images, labels, which):
+def foo(net, images, labels, which):
     net.set_input(dl.img_to_array(images[which]))
     net.forward_prop()
     # dl.show_img_arr(dl.img_to_array(images[which]))
@@ -18,16 +18,15 @@ if __name__ == "__main__":
 
     net = nn.Network([0 for i in range(784)])
 
-    data = dl.create_data(images, labels)
-    net.train(data, 5)
-    net.test(data)
+    net.train(dl.create_data(images, labels), 5)
+    net.test(dl.create_data(images, labels))
 
-    foo(images, labels, 0)
-    foo(images, labels, 1)
-    foo(images, labels, 2)
-    foo(images, labels, 3)
-    foo(images, labels, 4)
-    foo(images, labels, 5)
-    foo(images, labels, 6)
-    foo(images, labels, 7)
+    foo(net, images, labels, 0)
+    foo(net, images, labels, 1)
+    foo(net, images, labels, 2)
+    foo(net, images, labels, 3)
+    foo(net, images, labels, 4)
+    foo(net, images, labels, 5)
+    foo(net, images, labels, 6)
+    foo(net, images, labels, 7)
 
