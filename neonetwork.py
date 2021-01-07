@@ -188,14 +188,14 @@ class Network:
                 neuron.lgradvector = neuron.gradvector
                 neuron.gradvector = [0 for x in range(len(neuron.ilist)+1)]             
 
-    def train(self, data, max_iterations, batch_size=32, epsilon=20, lrate = 0.01, gamma = 0.5):
+    def train(self, data, max_iterations, batch_size=32, epsilon=0.001, lrate = 0.01, gamma = 0.9):
         end_all = False
         for epoch in range(max_iterations):
             end_epoch = False
             bsize = batch_size
             loss_value = 0
             epoch_data = deepcopy(data)
-            print(f"Epoch Data Length: {len(epoch_data)}")
+            print(f"Epoch 1")
             while True:
                 batch = []
                 loss_value = 0
@@ -219,9 +219,9 @@ class Network:
                 self.update_weights(bsize, lrate, gamma)
                 print(f"Batch finished. Elements to go: {len(epoch_data)} loss in batch: {loss_value/bsize}")
                 print(f"Out: {self.get_out()}")
-                print(f"first neuron wages: {self.layers[-1].neurons[0].wlist}")
+                print(f"first neuron wages: {self.layers[-1].neurons[0].wlist}\nfirst neuron bias: {self.layers[-1].neurons[0].neuronbias}\n")
                 if end_epoch:
-                    print(f"EPOCH {epoch}")
+                    print(f"EPOCH ENDED")
                     break
             if loss_value<epsilon:
                 break
@@ -235,5 +235,5 @@ class Network:
             maxind = fiona.argmax(self.out)
             if maxind == d[1]:
                 how_good+=1
-            if it%100==0:
+            if it%100==99:
                 print(f"{how_good}/{it}")

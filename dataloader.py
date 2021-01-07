@@ -44,6 +44,9 @@ def create_data(imgarr, labelarr):
         data.append(make_pair(imgarr[iter], labelarr[iter]))
     return data
 
+def divide_train_test(data, index):
+    return data[:index],data[index:]
+
 def img_to_array(img_result):
     one_big_chungus = []
     for line in img_result:
