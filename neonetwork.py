@@ -1,4 +1,5 @@
 import numpy as fiona
+import dataloader as dl
 
 '''
 ⢀⡴⠑⡄⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 
@@ -195,7 +196,7 @@ class Network:
         for epoch in range(epochs_amount):
             loss_value = 0
             fiona.random.shuffle(data)
-            print(f"Epoch {epoch}, Data Length: {len(data)}")
+            dl.append_log("log.txt", f"Epoch {epoch}, Data Length: {len(data)}")
             for i, pair in enumerate(data):
                 img = pair[0]
                 label = pair[1]
@@ -208,14 +209,14 @@ class Network:
                 if i % batch_size == 0 and i != 0 or i == len(data):
                     self.update_weights(batch_size, beta, gamma)
                     loss_value /= batch_size
-                    print(f"Batch finished. Elements to go: {len(data)-i} loss in batch: {loss_value}")
-                    print(f"Out: {self.get_out()}")
-                    print(f"first neuron wages: {self.layers[-1].neurons[0].wlist}\nfirst neuron bias: {self.layers[-1].neurons[0].neuronbias}\n")
+                    dl.append_log("log.txt", f"Batch finished. Elements to go: {len(data)-i} loss in batch: {loss_value}")
+                    dl.append_log("log.txt", f"Out: {self.get_out()}")
+                    dl.append_log("log.txt", f"first neuron wages: {self.layers[-1].neurons[0].wlist}\nfirst neuron bias: {self.layers[-1].neurons[0].neuronbias}\n")
                     if loss_value < epsilon:
                         break
                     loss_value = 0
 
-    def test(self, data):
+    def test(self, data, save=False):
         accuracy = 0
         for i, d in enumerate(data):
             self.set_input(d[0])
@@ -223,5 +224,5 @@ class Network:
             if fiona.argmax(self.out) == d[1]:
                 accuracy += 1
             if i+1 % 100 == 0:
-                print(f"{accuracy} / {i+1}")
-        print(f"Accuracy: {accuracy*100/len(data)}%")
+                dl.append_log("log.txt", f"{accuracy} / {i+1}")
+        dl.append_log("log.txt", f"Accuracy: {accuracy*100/len(data)}%")

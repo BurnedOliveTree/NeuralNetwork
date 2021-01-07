@@ -58,8 +58,10 @@ def create_data(imgarr, labelarr):
         data.append(make_pair(imgarr[i], labelarr[i]))
     return data
 
+
 def divide_train_test(data, index):
-    return data[:index],data[index:]
+    return data[:index], data[index:]
+
 
 def img_to_array(img_result):
     one_big_chungus = []
@@ -73,6 +75,11 @@ def array_to_img(ar, size=28):
     for i in range(size):
         matrix.append(ar[size*i:size*(i+1)])
     return matrix
+
+
+def append_log(file_name, text):
+    with open(file_name, "a") as file:
+        file.write(text+'\n')
 
 
 def show_img_arr(arr):
